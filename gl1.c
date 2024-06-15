@@ -54,6 +54,15 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, 1);
     }
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        GLint polygonMode[2] = {0};
+        glGetIntegerv(GL_POLYGON_MODE, polygonMode);
+        if (polygonMode[0] == GL_FILL && polygonMode[1] == GL_FILL) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else if (polygonMode[0] == GL_LINE && polygonMode[1] == GL_LINE) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+    }
 }
 
 static void framebuffersize_callback(GLFWwindow* window, int width, int height) {
@@ -151,9 +160,9 @@ void run(void) {
     GLuint program = compile("default.vert", "default.frag");
 
     GLfloat vertices[] = {
-        -0.5f, -0.5f,    1.0f, 0.3f, 0.0f, /* left  */
-         0.0f,  0.5f,    0.7f, 0.9f, 0.1f, /* top   */
-         0.5f, -0.5f,    0.6f, 0.1f, 1.0f  /* right */
+        -1.0f, -1.0f,    1.0f, 0.3f, 0.0f, /* left  */
+         0.0f,  1.0f,    0.7f, 0.9f, 0.1f, /* top   */
+         1.0f, -1.0f,    0.6f, 0.1f, 1.0f  /* right */
     };
 
     GLuint VAO, VBO;
