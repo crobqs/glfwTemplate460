@@ -1,0 +1,33 @@
+#include "utils.h"
+
+long long int hash_string(const char* s) {
+    const int
+        p = 31,
+        m = 1e9 + 9,
+        sLen = strlen(s);
+    long long
+        hash_value = 0,
+        p_pow = 1;
+    char
+        c;
+    for (int i = 0; i < sLen; ++i) {
+        c = s[i];
+        hash_value = (hash_value + c * p_pow) % m;
+        p_pow = (p_pow * p) % m;
+    }
+    return hash_value;
+}
+
+int main(void) {
+    const char
+        *s = "lmaoo",
+        *p = "lmaoo";
+    long long
+        sh = hash_string(s),
+        ph = hash_string(p);
+    bool
+        areEqual = (sh == ph);
+    printf("are equal : %s\n", areEqual ? "True" : "False");
+    
+    return 0;
+}

@@ -1,0 +1,50 @@
+#include "utils.h"
+
+void BinarySearchBound(int* nums, int numsSize, int target) {
+    int
+        l = 0,
+        r = numsSize - 1,
+        m;
+    while (l <= r) {
+        m = l + (r - l) / 2;
+        if (nums[m] < target) {
+            l = m + 1;
+        } else {
+            r = m - 1;
+        }
+    }
+    int lb = l < numsSize && l >= 0 ? l : -1;
+
+    l = 0, r = numsSize - 1;
+    while (l <= r) {
+        m = l + (r - l) / 2;
+        if (nums[m] <= target) {
+            l = m + 1;
+        } else {
+            r = m - 1;
+        }
+    }
+    int rb = r < numsSize && r >= 0 ? r : -1;
+
+    for (int i = 0; i < numsSize; ++i) {
+        if (i > 0) printf(" ");
+        if (i == lb) {
+            printf("\033[38;2;0;255;0m%d\033[0m", nums[i]);
+        } else if (i == rb) {
+            printf("\033[38;2;255;0;0m%d\033[0m", nums[i]);
+        } else {
+            printf("%d", nums[i]);
+        }
+    }
+    printf("\n");
+    printf("\n\033[38;2;0;255;0mlb\033[0m = %d\n", lb);
+    printf("\033[38;2;255;0;0mrb\033[0m = %d\n", rb);
+}
+
+int main(void) {
+    int nums[] = {1,2,2,2,3,3,6};
+    int numsSize = sizeof nums / sizeof *nums;
+    BinarySearchBound(nums, numsSize, 2);
+    
+    return 0;
+}

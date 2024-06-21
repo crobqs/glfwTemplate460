@@ -70,7 +70,7 @@ static void framebuffersize_callback(GLFWwindow* window, int width, int height) 
 }
 
 /* CAUTION::malloced */
-char* readFromFile(const char* file) {
+static char* readFromFile(const char* file) {
     FILE* fp = fopen(file, "r");
     if (!fp) {
         fprintf(stderr, "(%s, %d) ERROR::failed to read file \"%s\"\n", __func__, __LINE__, file);
@@ -95,7 +95,7 @@ char* readFromFile(const char* file) {
     return buffer;
 }
 
-GLuint compile(const char* vertexShaderFile, const char* fragmentShaderFile) {
+static GLuint compile(const char* vertexShaderFile, const char* fragmentShaderFile) {
     char infoLog[1024] = {0};
     int success = 0;
     char* vertexShaderSource = readFromFile(vertexShaderFile);
@@ -140,7 +140,7 @@ GLuint compile(const char* vertexShaderFile, const char* fragmentShaderFile) {
     return retProgam;
 }
 
-void run(void) {
+static void run(void) {
     int
         screenWidth = 800,
         screenHeight = 600;
@@ -193,3 +193,7 @@ void run(void) {
     glDeleteBuffers(1, &VBO);
     glfwTerminate();
 }
+
+struct gl1 const gl1 = {
+    run
+};
