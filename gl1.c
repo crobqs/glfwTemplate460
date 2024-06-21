@@ -12,6 +12,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <stb/stb_image.h>
 
 static void glfwSetWindowCenter( GLFWwindow * window ) {
     if(!window) return;
@@ -160,30 +161,39 @@ static void run(void) {
     GLuint program = compile("default.vert", "default.frag");
 
     GLfloat vertices[] = {
-        -1.0f, -1.0f,    1.0f, 0.3f, 0.0f, /* left  */
-         0.0f,  1.0f,    0.7f, 0.9f, 0.1f, /* top   */
-         1.0f, -1.0f,    0.6f, 0.1f, 1.0f  /* right */
+        -1.0f, -1.0f,    1.0f, 0.3f, 0.0f, /* bootom-left  */
+        -1.0f,  1.0f,    0.5f, 0.7f, 0.3f, /* top-left     */
+         1.0f,  1.0f,    0.7f, 0.9f, 0.1f, /* top-right    */
+         1.0f, -1.0f,    0.6f, 0.1f, 1.0f  /* bottom-right */
+    };
+    GLuint indices[] = {
+        0, 1, 3,
+        1, 2, 3
     };
 
-    GLuint VAO, VBO;
+    GLuint VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof vertices, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof indices, indices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glUseProgram(program);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
