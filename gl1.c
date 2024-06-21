@@ -14,6 +14,18 @@
 #include <GLFW/glfw3.h>
 #include <stb/stb_image.h>
 
+struct texture {
+    char name[64];
+    GLuint loc;
+    GLuint id;
+    int width;
+    int height;
+    int channels;
+    unsigned char * data;
+};
+
+GLfloat gMixRatio = 0.2f, gMixRatio_delta = 0.01f; GLuint gMixRatio_loc;
+
 static void glfwSetWindowCenter( GLFWwindow * window ) {
     if(!window) return;
     int sx = 0, sy = 0;
@@ -63,6 +75,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         } else if (polygonMode[0] == GL_LINE && polygonMode[1] == GL_LINE) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
+    }
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        gMixRatio = fmin(1.0f, fmax(0.0f, gMixRatio + gMixRatio_delta));
+    }
+    if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        gMixRatio = fmin(1.0f, fmax(0.0f, gMixRatio - gMixRatio_delta));
     }
 }
 
@@ -141,6 +159,24 @@ static GLuint compile(const char* vertexShaderFile, const char* fragmentShaderFi
     return retProgam;
 }
 
+static void loadTexture(struct texture* tex) {
+    glGenTextures(1, &(tex->id));
+    glBindTexture(GL_TEXTURE_2D, tex->id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    tex->data = stbi_load(tex->name, &(tex->width), &(tex->height), &(tex->channels), 4);
+    if (tex->data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        stbi_image_free(tex->data);
+    } else {
+        fprintf(stderr, "(%s, %d) Failed to load texture \"%s\"\n", __func__, __LINE__, tex->name);
+    }
+    printf("(%s, %d) \"%s\" texture loaded\n", __func__, __LINE__, tex->name);
+}
+
 static void run(void) {
     int
         screenWidth = 800,
@@ -194,26 +230,19 @@ static void run(void) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
-    int width, height, channels;
-    const char * tex1_FileName = "sunsetClouds.jpg";
-    GLuint tex1;
-    stbi_set_flip_vertically_on_load(true);
-
+    struct texture tex1 = {"sunsetClouds.jpg"};
+    struct texture tex2 = {"minimalistScenery.jpg"};
+    
     {
-        glGenTextures(1, &tex1);
-        glBindTexture(GL_TEXTURE_2D, tex1);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        unsigned char * data = stbi_load(tex1_FileName, &width, &height, &channels, 4);
-        if (data) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            stbi_image_free(data);
-        } else {
-            fprintf(stderr, "(%s, %d) Failed to load texture \"%s\"\n", __func__, __LINE__, tex1_FileName);
-        }
+        stbi_set_flip_vertically_on_load(true);
+        loadTexture(&tex1);
+        loadTexture(&tex2);
+        glUseProgram(program);
+        tex1.loc = glGetUniformLocation(program, "Tex1");
+        tex2.loc = glGetUniformLocation(program, "Tex2");
+        glUniform1i(tex1.loc, 0);
+        glUniform1i(tex2.loc, 1);
+        gMixRatio_loc = glGetUniformLocation(program, "MixRatio");
     }
 
     while (!glfwWindowShouldClose(window)) {
@@ -221,12 +250,18 @@ static void run(void) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glUseProgram(program);
         glBindVertexArray(VAO);
-        glBindTexture(GL_TEXTURE_2D, tex1);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex1.id);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, tex2.id);
+        glUniform1f(gMixRatio_loc, gMixRatio);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    glDeleteTextures(1, &tex1.id);
+    glDeleteTextures(1, &tex2.id);
     glDeleteProgram(program);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

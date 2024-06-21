@@ -5,6 +5,7 @@
         "stddef.h": "c",
         "glfw3.h": "c",
         "glad.h": "c",
-        "stb_image.h": "c"
+        "stb_image.h": "c",
+        "math.h": "c"
     }
 }
